@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#161B22"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_margin="16dp"
+    android:elevation="8dp">
+
+    <TextView
+        android:id="@+id/tvThreatCategory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⚠️ Possible Scam Detected"
+        android:textColor="#FFFF5252"
+        android:textStyle="bold"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tvThreatReason"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Suspicious content identified"
+        android:textColor="#E1E4E8"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/btnDismiss"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="12dp"
+        android:text="Dismiss"
+        android:textAllCaps="false"
+        android:backgroundTint="#30363D" />
+
+</LinearLayout>
