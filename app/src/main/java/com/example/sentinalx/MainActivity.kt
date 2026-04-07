@@ -8,10 +8,15 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.ui.platform.LocalView
 import androidx.activity.compose.setContent
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,10 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
-import com.example.sentinalx.ui.theme.DigitalRiskShieldTheme
-import com.example.sentinalx.ui.theme.DangerRed
-import com.example.sentinalx.ui.theme.DarkBackground
-import com.example.sentinalx.ui.theme.SurfaceDark
+import com.example.sentinalx.ui.theme.*
 import kotlinx.coroutines.delay
 
 import androidx.fragment.app.FragmentActivity
@@ -76,7 +78,10 @@ class MainActivity : FragmentActivity() {
                                     }
                                 },
                                 onSettingsClick = { navController.navigate("settings") },
-                                onSimulateScam = { type -> viewModel.simulateScam(type) },
+                                onSimulateScam = { type -> 
+                                    viewModel.simulateScam(type) 
+                                    viewModel.toggleTestOverlay(true)
+                                },
                                 onRunScan = { 
                                     viewModel.runForensicDeepScan(this@MainActivity) {
                                         navController.navigate("forensic_report")
@@ -146,56 +151,78 @@ fun AlertOverlay(
     threat: ThreatEvent?,
     onDismiss: () -> Unit
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
+        label = "alpha"
+    )
+
     AnimatedVisibility(
         visible = show && threat != null,
         enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
         exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut()
     ) {
         if (threat != null) {
+            val isIdTheft = threat.category == "Identity Theft Risk"
+            
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(SurfaceDark)
-                    .padding(16.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(if (isIdTheft) Color(0xFF1A0000) else SurfaceDark)
+                    .border(
+                        2.dp, 
+                        if (isIdTheft) DangerRed.copy(alpha = alpha) else DangerRed.copy(0.3f), 
+                        RoundedCornerShape(24.dp)
+                    )
+                    .padding(20.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(DangerRed.copy(0.1f)),
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(DangerRed.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Warning, null, tint = DangerRed)
+                        Icon(
+                            if (isIdTheft) Icons.Default.PrivacyTip else Icons.Default.Security, 
+                            null, 
+                            tint = DangerRed,
+                            modifier = Modifier.size(32.dp)
+                        )
                     }
-                    Spacer(Modifier.width(16.dp))
+                    Spacer(Modifier.width(20.dp))
                     Column(Modifier.weight(1f)) {
                         Text(
-                            "CRITICAL THREAT BLOCKED",
+                            if (isIdTheft) "SENSITIVE DATA BREACH PREVENTED" else "CRITICAL THREAT INTERCEPTED",
                             fontWeight = FontWeight.Black,
                             color = DangerRed,
-                            fontSize = 12.sp,
-                            letterSpacing = 1.sp
+                            fontSize = 10.sp,
+                            letterSpacing = 2.sp
                         )
                         Text(
-                            threat.category,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                            threat.category.uppercase(),
+                            fontWeight = FontWeight.Black,
+                            fontSize = 20.sp,
                             color = Color.White
                         )
                         Text(
-                            "SentinelX heuristic engine identified a malicious intent in a incoming message.",
+                            if (isIdTheft) "Unauthorized attempt to capture credentials detected on-screen." 
+                            else "SentinelX heuristic engine identified malicious intent in real-time.",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray
+                            color = TextSecondary,
+                            lineHeight = 14.sp
                         )
                     }
                 }
                 
                 LaunchedEffect(show) {
                     if (show) {
-                        delay(4000)
+                        delay(6000)
                         onDismiss()
                     }
                 }

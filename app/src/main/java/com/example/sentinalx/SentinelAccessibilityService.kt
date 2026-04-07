@@ -33,7 +33,10 @@ class SentinelAccessibilityService : AccessibilityService() {
 
         val packageName = event.packageName?.toString() ?: ""
         if (ThreatRepository.ignoredPackages.value.contains(packageName)) return
-        if (!isMonitoredApp(packageName)) return
+        
+        // Always monitor Settings to protect against malicious service activation
+        val isSettings = packageName.contains("com.android.settings")
+        if (!isMonitoredApp(packageName) && !isSettings) return
 
         when (event.eventType) {
             AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
@@ -49,22 +52,60 @@ class SentinelAccessibilityService : AccessibilityService() {
         analysisJob = scope.launch {
             delay(500) // Debounce screen scraping
             
-            // Capture the root node on the main thread
             val rootNode = rootInActiveWindow ?: return@launch
             
-            // Perform scraping and analysis in the background
             launch(Dispatchers.Default) {
-                val screenText = getAllText(rootNode)
+                val sb = StringBuilder()
+                val sensitiveFieldsFound = mutableListOf<String>()
                 
-                // On modern Android (API 33+), recycling is managed by the system.
-                // We'll skip manual recycling to avoid "IllegalStateException" if the system 
-                // decides to recycle it first.
+                // Deep scan the node tree
+                analyzeNodeTree(rootNode, sb, sensitiveFieldsFound)
                 
-                if (screenText.isNotBlank() && screenText.length > 20) {
+                val screenText = sb.toString().trim()
+                
+                if (sensitiveFieldsFound.isNotEmpty()) {
+                    Log.d(TAG, "Sensitive fields detected in $packageName: $sensitiveFieldsFound")
+                    // If we find password fields in an app that isn't a known browser or bank
+                    if (!isKnownSafeApp(packageName)) {
+                        analyzeContent(packageName, "SENSITIVE_INPUT_DETECTED: $screenText")
+                    }
+                } else if (screenText.isNotBlank() && screenText.length > 20) {
                     analyzeContent(packageName, screenText)
                 }
             }
         }
+    }
+
+    private fun analyzeNodeTree(node: AccessibilityNodeInfo?, sb: StringBuilder, sensitiveFields: MutableList<String>) {
+        if (node == null) return
+
+        // Extract text content
+        node.text?.let { sb.append(it).append(" ") }
+        node.contentDescription?.let { sb.append(it).append(" ") }
+
+        // Detect sensitive inputs
+        if (node.isPassword) {
+            sensitiveFields.add("Password Field")
+        }
+        
+        // Look for common PIN/OTP field patterns in labels
+        val hint = node.hintText?.toString()?.lowercase() ?: ""
+        if (hint.contains("pin") || hint.contains("otp") || hint.contains("cvv")) {
+            sensitiveFields.add("Secure Input ($hint)")
+        }
+
+        for (i in 0 until node.childCount) {
+            try {
+                analyzeNodeTree(node.getChild(i), sb, sensitiveFields)
+            } catch (e: Exception) {
+                // Ignore transient node invalidation
+            }
+        }
+    }
+
+    private fun isKnownSafeApp(packageName: String): Boolean {
+        val safePrefixes = listOf("com.android.chrome", "org.mozilla.firefox", "com.google.android.apps.messaging")
+        return safePrefixes.any { packageName.startsWith(it) } || packageName.contains("bank")
     }
 
     private fun analyzeContent(packageName: String, text: String) {
@@ -78,37 +119,6 @@ class SentinelAccessibilityService : AccessibilityService() {
             // Also log to repository for history
             ThreatRepository.addThreat(packageName, text.take(150) + "...", result)
         }
-    }
-
-    private fun getAllText(rootNode: AccessibilityNodeInfo?): String {
-        if (rootNode == null) return ""
-        val sb = StringBuilder()
-        val stack = mutableListOf<AccessibilityNodeInfo>()
-        stack.add(rootNode)
-
-        // Limiting depth to prevent extreme cases in complex layouts
-        var processedCount = 0
-        val MAX_NODES = 500
-
-        while (stack.isNotEmpty() && processedCount < MAX_NODES) {
-            val node = stack.removeAt(stack.size - 1)
-            processedCount++
-            
-            node.text?.let { sb.append(it).append(" ") }
-            node.contentDescription?.let { sb.append(it).append(" ") }
-
-            for (i in 0 until node.childCount) {
-                try {
-                    node.getChild(i)?.let { child ->
-                        stack.add(child)
-                    }
-                } catch (e: Exception) {
-                    // Node might be invalidated by the time we try to get child
-                    Log.e(TAG, "Failed to get child node", e)
-                }
-            }
-        }
-        return sb.toString().trim()
     }
 
     private fun isMonitoredApp(packageName: String): Boolean {

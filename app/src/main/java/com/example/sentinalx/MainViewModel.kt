@@ -95,6 +95,8 @@ class MainViewModel : ViewModel() {
             "BANK" -> "SMS" to "SBI Alert: Your account will be suspended in 2 hours. Update KYC at http://sbi-secure.in"
             "FRAUD" -> "Telegram" to "Amazon Gift: You won a free iPhone. Pay ₹299 shipping to claim immediately."
             "HINGLISH" -> "WhatsApp" to "Namaste! Aapka ₹25,00,000 ka KBC lottery prize nikla hai. Processing fee ke liye ₹12,500 jama kare jaldi kare!"
+            "ID_THEFT" -> "Unknown App" to "SENSITIVE_INPUT_DETECTED: User attempting to enter password into unverified utility app."
+            "HOMOGRAPH" -> "Chrome" to "Security Alert: Verify your account at https://amaz0n.in (Note: The 'o' is a zero)"
             else -> "System" to "Generic suspicious activity detected."
         }
 

@@ -2,25 +2,25 @@ package com.example.sentinalx
 
 import android.content.Context
 import android.util.Log
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.common.FileUtil
+// import org.tensorflow.lite.Interpreter
+// import org.tensorflow.lite.support.common.FileUtil
 import java.nio.MappedByteBuffer
 import java.util.*
 
 class ScamClassifier(private val context: Context) {
-    private var interpreter: Interpreter? = null
+    // private var interpreter: Interpreter? = null
     private val modelPath = "scam_detector_v1.tflite"
     private var isInitialized = false
 
     init {
         try {
-            val model = FileUtil.loadMappedFile(context, modelPath)
-            val options = Interpreter.Options().apply {
-                setNumThreads(4)
-            }
-            interpreter = Interpreter(model, options)
+            // val model = FileUtil.loadMappedFile(context, modelPath)
+            // val options = Interpreter.Options().apply {
+            //     setNumThreads(4)
+            // }
+            // interpreter = Interpreter(model, options)
             isInitialized = true
-            Log.d("ScamClassifier", "ML Model loaded successfully")
+            Log.d("ScamClassifier", "ML Model placeholder active")
         } catch (e: Exception) {
             Log.e("ScamClassifier", "Error loading model: ${e.message}. ML detection will fallback to heuristics.")
         }
@@ -31,9 +31,9 @@ class ScamClassifier(private val context: Context) {
      * For demo purposes, if the model isn't present, it returns a simulated score.
      */
     fun classify(text: String): Float {
-        if (!isInitialized || interpreter == null) {
-            return simulateInference(text)
-        }
+        // if (!isInitialized || interpreter == null) {
+        //     return simulateInference(text)
+        // }
         
         return simulateInference(text)
     }

@@ -126,6 +126,7 @@ object ThreatRepository {
         "Job Scam" -> "Legitimate companies never ask for money during the hiring process."
         "KYC/Bank Fraud" -> "Banks never ask for KYC updates via SMS links."
         "Payment Scam" -> "Never pay 'shipping' or 'taxes' to claim a prize."
+        "Identity Theft Risk" -> "An unauthorized app is trying to capture your credentials. Secure your accounts immediately."
         else -> "Do not click any links or share sensitive information."
     }
 }

@@ -73,6 +73,13 @@ object RiskAnalyzer {
         val urlAnalysis = SafeBrowsingSimulator.checkUrl(text)
         if (urlAnalysis.riskScore > 0) {
             addSignal(urlAnalysis.riskScore, urlAnalysis.reasons.joinToString(", "))
+            category = if (category == "Unclassified") "Homograph Phishing" else category
+        }
+
+        // 5b. Sensitive Information Request in Untrusted App
+        if (text.contains("SENSITIVE_INPUT_DETECTED:")) {
+            addSignal(60, "Detected secure input field (password/PIN) in an unverified application")
+            category = "Identity Theft Risk"
         }
 
         val matcher = URL_PATTERN.matcher(text)

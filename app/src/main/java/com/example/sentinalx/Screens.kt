@@ -179,9 +179,19 @@ fun HomeScreen(
                     SectionCard {
                         Text("SIMULATION ENVIRONMENT", fontWeight = FontWeight.Black, color = PrimaryCyan, fontSize = 10.sp, letterSpacing = 1.sp)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            DemoButton("PHISHING", Modifier.weight(1f)) { onSimulateScam("BANK") }
-                            DemoButton("FRAUD", Modifier.weight(1f)) { onSimulateScam("PAYMENT") }
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                DemoButton("FINANCIAL", Modifier.weight(1f)) { onSimulateScam("BANK") }
+                                DemoButton("JOB SCAM", Modifier.weight(1f)) { onSimulateScam("PHISHING") }
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                DemoButton("ID THEFT", Modifier.weight(1f)) { onSimulateScam("ID_THEFT") }
+                                DemoButton("HOMOGRAPH", Modifier.weight(1f)) { onSimulateScam("HOMOGRAPH") }
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                DemoButton("REGIONAL", Modifier.weight(1f)) { onSimulateScam("HINGLISH") }
+                                DemoButton("REWARD", Modifier.weight(1f)) { onSimulateScam("FRAUD") }
+                            }
                         }
                     }
                 }
