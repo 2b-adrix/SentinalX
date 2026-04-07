@@ -73,5 +73,7 @@ data class UiState(
     val networkIntegrityStatus: NetworkStatus = NetworkStatus(),
     val isForensicExporting: Boolean = false,
     val globalThreatPings: List<androidx.compose.ui.geometry.Offset> = emptyList(),
-    val scanProgress: ScanProgress = ScanProgress()
+    val scanProgress: ScanProgress = ScanProgress(),
+    val emergencyNumber: String = "",
+    val smsStatus: String? = null
 )

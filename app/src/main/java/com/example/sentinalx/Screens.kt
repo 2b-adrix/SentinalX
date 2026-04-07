@@ -762,6 +762,136 @@ fun TrustLevelBanner(level: TrustLevel, confidence: Int) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun EmergencyContactScreen(
+    state: UiState,
+    onSaveNumber: (String) -> Unit,
+    onClearStatus: () -> Unit,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    var tempNumber by remember { mutableStateOf(state.emergencyNumber) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.smsStatus) {
+        state.smsStatus?.let {
+            snackbarHostState.showSnackbar(it)
+            onClearStatus()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("EMERGENCY RESPONSE CENTER", fontWeight = FontWeight.Black, fontSize = 16.sp, letterSpacing = 1.sp) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null, tint = PrimaryCyan) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBackground)
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = DarkBackground
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // Permission Status Card
+            val hasSmsPermission = PermissionUtils.hasPermission(context, android.Manifest.permission.SEND_SMS)
+            SectionCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        Modifier.size(48.dp).clip(CircleShape).background(if (hasSmsPermission) SuccessGreen.copy(0.1f) else DangerRed.copy(0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            if (hasSmsPermission) Icons.Default.CheckCircle else Icons.Default.Unpublished,
+                            null,
+                            tint = if (hasSmsPermission) SuccessGreen else DangerRed
+                        )
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("SMS PROTOCOL STATUS", fontWeight = FontWeight.Black, fontSize = 10.sp, color = PrimaryCyan)
+                        Text(
+                            if (hasSmsPermission) "TRANSMISSION READY" else "PERMISSION REQUIRED",
+                            fontWeight = FontWeight.Bold,
+                            color = if (hasSmsPermission) SuccessGreen else DangerRed
+                        )
+                    }
+                    if (!hasSmsPermission) {
+                        Button(
+                            onClick = {
+                                val activity = context as? androidx.activity.ComponentActivity
+                                activity?.requestPermissions(arrayOf(android.Manifest.permission.SEND_SMS), 101)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = DangerRed.copy(0.2f)),
+                            contentPadding = PaddingValues(horizontal = 12.dp)
+                        ) {
+                            Text("FIX", color = DangerRed, fontWeight = FontWeight.Black)
+                        }
+                    }
+                }
+            }
+
+            // Phone Number Input Card
+            SectionCard {
+                Text("TRUSTED CONTACT NUMBER", fontWeight = FontWeight.Black, fontSize = 10.sp, color = PrimaryCyan)
+                Spacer(Modifier.height(8.dp))
+                Text("Automated alerts will be dispatched to this number upon HIGH-risk detection.", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Spacer(Modifier.height(20.dp))
+                
+                OutlinedTextField(
+                    value = tempNumber,
+                    onValueChange = { tempNumber = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("+1 555 0123", color = TextSecondary) },
+                    prefix = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(16.dp), tint = PrimaryCyan) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = PrimaryCyan,
+                        unfocusedBorderColor = CardOutline,
+                        cursorColor = PrimaryCyan
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                Button(
+                    onClick = { onSaveNumber(tempNumber) },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryCyan),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = tempNumber != state.emergencyNumber
+                ) {
+                    Icon(Icons.Default.Save, null, tint = DarkBackground)
+                    Spacer(Modifier.width(12.dp))
+                    Text("UPDATE EMERGENCY CONTACT", fontWeight = FontWeight.Black, color = DarkBackground)
+                }
+            }
+
+            // Warning Banner
+            Card(
+                colors = CardDefaults.cardColors(containerColor = WarningAmber.copy(0.05f)),
+                border = BorderStroke(1.dp, WarningAmber.copy(0.2f))
+            ) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Warning, null, tint = WarningAmber, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(16.dp))
+                    Text(
+                        "Note: SMS alerts include a 5-minute cooldown to prevent network flooding.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = WarningAmber
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun SettingsScreen(
     state: UiState,
     onToggleProtection: () -> Unit,
@@ -770,9 +900,17 @@ fun SettingsScreen(
     onClearHistory: () -> Unit,
     onRemoveIgnoredPackage: (String) -> Unit,
     onExportForensics: () -> Unit,
+    onEmergencyClick: () -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.smsStatus) {
+        state.smsStatus?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -782,6 +920,7 @@ fun SettingsScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBackground)
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = DarkBackground
     ) { padding ->
         LazyColumn(
@@ -843,6 +982,26 @@ fun SettingsScreen(
                             Text("Enable developer attack triggers", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
                         }
                         Switch(checked = state.isDemoModeEnabled, onCheckedChange = { onToggleDemoMode() })
+                    }
+                }
+            }
+
+            item { Text("Emergency Response", fontWeight = FontWeight.Bold, color = PrimaryCyan, fontSize = 12.sp) }
+
+            item {
+                SectionCard(modifier = Modifier.clickable { onEmergencyClick() }) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Security, null, tint = PrimaryCyan)
+                        Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Emergency Protocol", fontWeight = FontWeight.Bold)
+                            Text(
+                                if (state.emergencyNumber.isBlank()) "No contact configured" else "Alerting: ${state.emergencyNumber}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (state.emergencyNumber.isBlank()) WarningAmber else SuccessGreen
+                            )
+                        }
+                        Icon(Icons.Default.ChevronRight, null, tint = TextSecondary)
                     }
                 }
             }

@@ -59,7 +59,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     // TensorFlow Lite
-    // implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite)
     // implementation(libs.tensorflow.lite.support)
     // implementation(libs.tensorflow.lite.metadata)
 

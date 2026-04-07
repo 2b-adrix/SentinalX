@@ -128,6 +128,15 @@ class MainActivity : FragmentActivity() {
                                 onClearHistory = { viewModel.clearHistory() },
                                 onRemoveIgnoredPackage = { pkg -> viewModel.removeIgnoredPackage(pkg) },
                                 onExportForensics = { viewModel.exportForensicReport(this@MainActivity) },
+                                onEmergencyClick = { navController.navigate("emergency_config") },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("emergency_config") {
+                            EmergencyContactScreen(
+                                state = state,
+                                onSaveNumber = { viewModel.saveEmergencyNumber(it) },
+                                onClearStatus = { viewModel.clearSmsStatus() },
                                 onBack = { navController.popBackStack() }
                             )
                         }

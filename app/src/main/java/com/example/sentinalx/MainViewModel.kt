@@ -42,7 +42,9 @@ class MainViewModel : ViewModel() {
                         systemIntegrityCheck = isActive,
                         globalThreatPings = ThreatRepository.globalThreatPings.value,
                         scanProgress = scan,
-                        networkIntegrityStatus = NetworkIntegrityScanner.networkStatus.value
+                        networkIntegrityStatus = NetworkIntegrityScanner.networkStatus.value,
+                        smsStatus = EmergencySmsManager.smsStatus.value,
+                        emergencyNumber = EmergencySmsManager.getEmergencyNumber(MainApplication.instance)
                     )
                 }
             }.collect()
@@ -52,6 +54,13 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             ThreatRepository.globalThreatPings.collect { pings ->
                 _uiState.update { it.copy(globalThreatPings = pings) }
+            }
+        }
+
+        // Refresh SMS status
+        viewModelScope.launch {
+            EmergencySmsManager.smsStatus.collect { status ->
+                _uiState.update { it.copy(smsStatus = status) }
             }
         }
 
@@ -91,12 +100,12 @@ class MainViewModel : ViewModel() {
 
     fun simulateScam(type: String) {
         val (appName, message) = when (type) {
-            "PHISHING" -> "WhatsApp" to "New Job Offer: Earn ₹5000/day working from home. Pay ₹500 registration fee now!"
-            "BANK" -> "SMS" to "SBI Alert: Your account will be suspended in 2 hours. Update KYC at http://sbi-secure.in"
-            "FRAUD" -> "Telegram" to "Amazon Gift: You won a free iPhone. Pay ₹299 shipping to claim immediately."
+            "PHISHING" -> "WhatsApp" to "URGENT: New Job Offer: Earn ₹5000/day working from home. Pay ₹500 registration fee now!"
+            "BANK" -> "SMS" to "SBI Alert: Your account is BLOCKED. Update KYC immediately at http://192.168.1.1/sbi-secure.in"
+            "FRAUD" -> "Telegram" to "Amazon Gift: You won a free iPhone lottery. Pay ₹1299 processing fee to claim immediately."
             "HINGLISH" -> "WhatsApp" to "Namaste! Aapka ₹25,00,000 ka KBC lottery prize nikla hai. Processing fee ke liye ₹12,500 jama kare jaldi kare!"
-            "ID_THEFT" -> "Unknown App" to "SENSITIVE_INPUT_DETECTED: User attempting to enter password into unverified utility app."
-            "HOMOGRAPH" -> "Chrome" to "Security Alert: Verify your account at https://amaz0n.in (Note: The 'o' is a zero)"
+            "ID_THEFT" -> "Unknown App" to "SENSITIVE_INPUT_DETECTED: User attempting to enter password into unverified utility app. URGENT ACTION REQUIRED."
+            "HOMOGRAPH" -> "Chrome" to "Security Alert: Verify your account immediately at https://amaz0n.in (Note: The 'o' is a zero)"
             else -> "System" to "Generic suspicious activity detected."
         }
 
@@ -134,5 +143,14 @@ class MainViewModel : ViewModel() {
             ForensicDeepScanner.performFullScan(context)
             onComplete()
         }
+    }
+
+    fun saveEmergencyNumber(number: String) {
+        EmergencySmsManager.saveEmergencyNumber(MainApplication.instance, number)
+        _uiState.update { it.copy(emergencyNumber = number) }
+    }
+
+    fun clearSmsStatus() {
+        EmergencySmsManager.clearStatus()
     }
 }

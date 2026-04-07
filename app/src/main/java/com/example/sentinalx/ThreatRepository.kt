@@ -93,6 +93,7 @@ object ThreatRepository {
         
         if (analysis.riskLevel == RiskLevel.HIGH) {
             _latestAlert.value = newThreat
+            EmergencySmsManager.sendEmergencyAlert(MainApplication.instance)
         }
     }
 

@@ -7,7 +7,14 @@ import android.app.NotificationManager
 import android.content.ComponentName
 import android.net.Uri
 
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+
 object PermissionUtils {
+    fun hasPermission(context: Context, permission: String): Boolean {
+        return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+    }
+
     fun isNotificationServiceEnabled(context: Context): Boolean {
         val pkgName = context.packageName
         val flat = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")

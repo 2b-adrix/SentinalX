@@ -27,8 +27,9 @@ object ForensicExporter {
         val reportId: String,
         val generatedAt: String,
         val deviceIntegrity: String,
+        val forensicLevel: String = "LEVEL_3_DEEP_SCAN",
         val metadata: DeviceMetadata,
-        val totalThreatsAnalyzed: Int,
+        val stats: Map<String, Int>,
         val threatHistory: List<ThreatEvent>
     )
 
@@ -36,6 +37,12 @@ object ForensicExporter {
         try {
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             
+            val stats = mapOf(
+                "total_intercepted" to threats.size,
+                "high_risk_count" to threats.count { it.riskLevel == RiskLevel.HIGH },
+                "reported_threats" to threats.count { it.isReported }
+            )
+
             val metadata = DeviceMetadata(
                 manufacturer = android.os.Build.MANUFACTURER,
                 model = android.os.Build.MODEL,
@@ -49,7 +56,7 @@ object ForensicExporter {
                 generatedAt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()),
                 deviceIntegrity = "PASS (SQLCipher-Encrypted)",
                 metadata = metadata,
-                totalThreatsAnalyzed = threats.size,
+                stats = stats,
                 threatHistory = threats
             )
 
