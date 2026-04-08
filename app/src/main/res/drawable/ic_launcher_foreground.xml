@@ -5,46 +5,83 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- The Sentinel Shield -->
+    <!-- Outer Targeting Brackets (Cyber-Detection) -->
     <path
-        android:pathData="M54,18 L84,30 C84,30 84,65 54,85 C24,65 24,30 24,30 L54,18 Z">
-        <aapt:attr name="android:fillColor">
+        android:pathData="M30,20 L20,20 L20,30 M78,20 L88,20 L88,30 M30,88 L20,88 L20,78 M78,88 L88,88 L88,78"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="square"
+        android:strokeColor="#38BDF8"
+        android:strokeAlpha="0.4" />
+
+    <!-- Heuristic Data Ring (Dotted Outer) -->
+    <path
+        android:pathData="M54,54 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0"
+        android:strokeWidth="1"
+        android:strokeColor="#2563EB"
+        android:strokeAlpha="0.2"
+        android:strokeDashArray="2,4" />
+
+    <!-- Fragmented Hex-Shield (The Sentinel Perimeter) -->
+    <path
+        android:pathData="M54,22 L82,38 V70 L54,86 L26,70 V38 Z"
+        android:strokeWidth="0.5"
+        android:strokeColor="#60A5FA"
+        android:strokeAlpha="0.3" />
+
+    <!-- Pulse Wave 1 -->
+    <path
+        android:pathData="M54,54 m-28,0 a28,28 0 1,1 56,0 a28,28 0 1,1 -56,0"
+        android:strokeWidth="0.8"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.15" />
+
+    <!-- The Sentinel 'X' - Primary Neon Core -->
+    <path
+        android:pathData="M40,40 L68,68 M68,40 L40,68"
+        android:strokeWidth="8"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
             <gradient
-                android:endX="84"
-                android:endY="85"
-                android:startX="24"
-                android:startY="18"
-                android:type="linear">
-                <item android:color="#2563EB" android:offset="0.0" /> <!-- Blue 600 -->
-                <item android:color="#1E40AF" android:offset="1.0" /> <!-- Blue 800 -->
+                android:centerX="54"
+                android:centerY="54"
+                android:gradientRadius="20"
+                android:type="radial">
+                <item android:color="#FFFFFF" android:offset="0.0" />
+                <item android:color="#3B82F6" android:offset="1.0" />
             </gradient>
         </aapt:attr>
     </path>
 
-    <!-- Inner Shield Glow -->
+    <!-- Glowing Aura for 'X' -->
     <path
-        android:pathData="M54,24 L78,34 C78,34 78,60 54,78 C30,60 30,34 30,34 L54,24 Z"
-        android:fillColor="#3B82F6" /> <!-- Blue 500 -->
-
-    <!-- The "X" Sentinel Mark -->
-    <path
-        android:pathData="M44,40 L64,60 M64,40 L44,60"
-        android:strokeWidth="4"
+        android:pathData="M40,40 L68,68 M68,40 L40,68"
+        android:strokeWidth="12"
         android:strokeLineCap="round"
-        android:strokeColor="#FFFFFF" />
+        android:strokeColor="#2563EB"
+        android:strokeAlpha="0.25" />
 
-    <!-- Pulse/Heuristic Circle -->
+    <!-- Inner Core Hub -->
     <path
-        android:pathData="M54,50 m-22,0 a22,22 0 1,1 44,0 a22,22 0 1,1 -44,0"
-        android:strokeWidth="1.5"
-        android:strokeColor="#60A5FA"
-        android:strokeAlpha="0.4" />
+        android:pathData="M54,54 m-6,0 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M54,54 m-10,0 a10,10 0 1,1 20,0 a10,10 0 1,1 -20,0"
+        android:fillColor="#3B82F6"
+        android:fillAlpha="0.3" />
 
-    <!-- Scanning Line (Subtle) -->
+    <!-- Vertical Scanning Laser (Subtle) -->
     <path
-        android:pathData="M30,50 L78,50"
+        android:pathData="M35,54 L73,54"
         android:strokeWidth="0.5"
         android:strokeColor="#FFFFFF"
-        android:strokeAlpha="0.3" />
+        android:strokeAlpha="0.6" />
+
+    <!-- Top Reflective Glint -->
+    <path
+        android:pathData="M45,35 L65,35"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.2" />
 
 </vector>
