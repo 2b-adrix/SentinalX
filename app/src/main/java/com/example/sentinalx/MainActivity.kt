@@ -56,98 +56,104 @@ class MainActivity : FragmentActivity() {
                     }
                 }
 
+                var showSplash by remember { mutableStateOf(true) }
+
                 Box(modifier = Modifier.fillMaxSize().background(DarkBackground)) {
-                    NavHost(navController = navController, startDestination = "home") {
-                        composable("home") {
-                            HomeScreen(
-                                state = state,
-                                onThreatClick = { threat -> 
-                                    if (state.isHistoryLocked) {
-                                        BiometricHelper.showBiometricPrompt(
-                                            activity = this@MainActivity,
-                                            onSuccess = {
-                                                viewModel.setHistoryLocked(false)
-                                                navController.navigate("detail/${threat.id}")
-                                            },
-                                            onError = { error ->
-                                                Toast.makeText(this@MainActivity, "Access Denied: $error", Toast.LENGTH_SHORT).show()
-                                            }
-                                        )
-                                    } else {
-                                        navController.navigate("detail/${threat.id}")
+                    if (showSplash) {
+                        SplashScreen(onTimeout = { showSplash = false })
+                    } else {
+                        NavHost(navController = navController, startDestination = "home") {
+                            composable("home") {
+                                HomeScreen(
+                                    state = state,
+                                    onThreatClick = { threat -> 
+                                        if (state.isHistoryLocked) {
+                                            BiometricHelper.showBiometricPrompt(
+                                                activity = this@MainActivity,
+                                                onSuccess = {
+                                                    viewModel.setHistoryLocked(false)
+                                                    navController.navigate("detail/${threat.id}")
+                                                },
+                                                onError = { error ->
+                                                    Toast.makeText(this@MainActivity, "Access Denied: $error", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                        } else {
+                                            navController.navigate("detail/${threat.id}")
+                                        }
+                                    },
+                                    onSettingsClick = { navController.navigate("settings") },
+                                    onSimulateScam = { type -> 
+                                        viewModel.simulateScam(type) 
+                                        viewModel.toggleTestOverlay(true)
+                                    },
+                                    onRunScan = { 
+                                        viewModel.runForensicDeepScan(this@MainActivity) {
+                                            navController.navigate("forensic_report")
+                                        }
+                                    },
+                                    onScanNetwork = {
+                                        viewModel.scanNetworkIntegrity()
                                     }
-                                },
-                                onSettingsClick = { navController.navigate("settings") },
-                                onSimulateScam = { type -> 
-                                    viewModel.simulateScam(type) 
-                                    viewModel.toggleTestOverlay(true)
-                                },
-                                onRunScan = { 
-                                    viewModel.runForensicDeepScan(this@MainActivity) {
-                                        navController.navigate("forensic_report")
-                                    }
-                                },
-                                onScanNetwork = {
-                                    viewModel.scanNetworkIntegrity()
+                                )
+                            }
+                            composable("forensic_report") {
+                                ForensicReportScreen(
+                                    results = state.scanProgress.results,
+                                    onUninstall = { packageName ->
+                                        val intent = Intent(Intent.ACTION_DELETE).apply {
+                                            data = Uri.parse("package:$packageName")
+                                        }
+                                        startActivity(intent)
+                                    },
+                                    onIgnore = { packageName ->
+                                        viewModel.ignorePackage(packageName)
+                                    },
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
+                            composable("detail/{id}") { backStackEntry ->
+                                val id = backStackEntry.arguments?.getString("id")
+                                val threat = state.threats.find { it.id == id }
+                                threat?.let {
+                                    DetailScreen(
+                                        threat = it, 
+                                        onIgnoreApp = { pkg -> viewModel.ignorePackage(pkg) },
+                                        onReport = { viewModel.reportThreat(it) },
+                                        onBack = { navController.popBackStack() }
+                                    )
                                 }
-                            )
-                        }
-                        composable("forensic_report") {
-                            ForensicReportScreen(
-                                results = state.scanProgress.results,
-                                onUninstall = { packageName ->
-                                    val intent = Intent(Intent.ACTION_DELETE).apply {
-                                        data = Uri.parse("package:$packageName")
-                                    }
-                                    startActivity(intent)
-                                },
-                                onIgnore = { packageName ->
-                                    viewModel.ignorePackage(packageName)
-                                },
-                                onBack = { navController.popBackStack() }
-                            )
-                        }
-                        composable("detail/{id}") { backStackEntry ->
-                            val id = backStackEntry.arguments?.getString("id")
-                            val threat = state.threats.find { it.id == id }
-                            threat?.let {
-                                DetailScreen(
-                                    threat = it, 
-                                    onIgnoreApp = { pkg -> viewModel.ignorePackage(pkg) },
-                                    onReport = { viewModel.reportThreat(it) },
+                            }
+                            composable("settings") {
+                                SettingsScreen(
+                                    state = state,
+                                    onToggleProtection = { viewModel.toggleProtection() },
+                                    onToggleDemoMode = { viewModel.toggleDemoMode() },
+                                    onToggleHistoryLock = { viewModel.setHistoryLocked(it) },
+                                    onClearHistory = { viewModel.clearHistory() },
+                                    onRemoveIgnoredPackage = { pkg -> viewModel.removeIgnoredPackage(pkg) },
+                                    onExportForensics = { viewModel.exportForensicReport(this@MainActivity) },
+                                    onEmergencyClick = { navController.navigate("emergency_config") },
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
+                            composable("emergency_config") {
+                                EmergencyContactScreen(
+                                    state = state,
+                                    onSaveNumber = { viewModel.saveEmergencyNumber(it) },
+                                    onClearStatus = { viewModel.clearSmsStatus() },
                                     onBack = { navController.popBackStack() }
                                 )
                             }
                         }
-                        composable("settings") {
-                            SettingsScreen(
-                                state = state,
-                                onToggleProtection = { viewModel.toggleProtection() },
-                                onToggleDemoMode = { viewModel.toggleDemoMode() },
-                                onToggleHistoryLock = { viewModel.setHistoryLocked(it) },
-                                onClearHistory = { viewModel.clearHistory() },
-                                onRemoveIgnoredPackage = { pkg -> viewModel.removeIgnoredPackage(pkg) },
-                                onExportForensics = { viewModel.exportForensicReport(this@MainActivity) },
-                                onEmergencyClick = { navController.navigate("emergency_config") },
-                                onBack = { navController.popBackStack() }
-                            )
-                        }
-                        composable("emergency_config") {
-                            EmergencyContactScreen(
-                                state = state,
-                                onSaveNumber = { viewModel.saveEmergencyNumber(it) },
-                                onClearStatus = { viewModel.clearSmsStatus() },
-                                onBack = { navController.popBackStack() }
-                            )
-                        }
-                    }
 
-                    // Global Alert Overlay
-                    AlertOverlay(
-                        show = state.showTestOverlay,
-                        threat = state.lastDetectedThreat,
-                        onDismiss = { viewModel.toggleTestOverlay(false) }
-                    )
+                        // Global Alert Overlay
+                        AlertOverlay(
+                            show = state.showTestOverlay,
+                            threat = state.lastDetectedThreat,
+                            onDismiss = { viewModel.toggleTestOverlay(false) }
+                        )
+                    }
                 }
             }
         }
